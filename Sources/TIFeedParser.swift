@@ -127,7 +127,6 @@ open class TIFeedParser {
     
     fileprivate static func parseRSS2(_ xmlDoc:AEXMLDocument) -> Channel {
         var items:Array<Item> = Array()
-        
         for itemObject in xmlDoc.root["channel"]["item"].all! {
             
             let title:String = itemObject["title"].value!
@@ -135,32 +134,22 @@ open class TIFeedParser {
             let pubDateString:String = itemObject["pubDate"].value!
             let pubDate:Date = stringFromDate(pubDateString, format: "EEE, d MMM yyyy HH:mm:ss Z")
             
-            var description:String? = nil
+            var item:Item = Item(title: title, link: link, pubDate: pubDate, description: nil, contentEncoded: nil, thumbnail:nil)
             
-            if itemObject["description"].value != nil {
-                description = itemObject["description"].value
+            if let it = itemObject["description"].value {
+                item.description = it
             }
             
-            var contentEncoded:String? = nil
-            
-            if itemObject["contentEncoded"].value != nil {
-                contentEncoded = itemObject["content:encoded"].value!
+            if let it = itemObject["contentEncoded"].value {
+                item.contentEncoded = it
             }
             
-            var thumbnail:String? = nil
-            
-            if itemObject["media:thumbnail"].value != nil {
-                
-                if (itemObject["media:thumbnail"].value! != "element <media:thumbnail> not found") {
-                    let mediaThumbnails:Array = itemObject["media:thumbnail"].all!
-                    
-                    if (mediaThumbnails.count > 0) {
-                        thumbnail = mediaThumbnails[1].attributes["url"]! as String
-                    }
+            if let mediaThumbnails = itemObject["media:thumbnail"].all {
+                if (mediaThumbnails.count > 0) {
+                    item.thumbnail = mediaThumbnails[0].attributes["url"]! as String
                 }
             }
             
-            let item:Item = Item(title: title, link: link, pubDate: pubDate, description: description, contentEncoded: contentEncoded, thumbnail:thumbnail)
             items.append(item)
         }
         
